@@ -1,0 +1,115 @@
+﻿<div class="top-row pl-4 navbar navbar-dark">
+    <a class="navbar-brand" href="">BlazorServerDemoApp</a>
+    <button class="navbar-toggler" @onclick="ToggleNavMenu">
+        <span class="navbar-toggler-icon"></span>
+    </button>
+</div>
+
+<div class="@NavMenuCssClass" @onclick="ToggleNavMenu">
+    @if (ReportMenu)
+    {
+        
+        <ul class="nav flex-column">
+            <li class="nav-item px-3">
+                <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
+                    <span class="oi oi-home" aria-hidden="true"></span> Home
+                </NavLink>
+            </li>
+            <li class="nav-item px-3">
+                <NavLink class="nav-link" href="Ledger\post">
+                    <span class="oi oi-spreadsheet" aria-hidden="true"></span> Post Ledger
+                </NavLink>
+            </li>
+            <li class="nav-item px-3">
+                <NavLink class="nav-link" href="Ledger\print">
+                    <span class="oi oi-spreadsheet" aria-hidden="true"></span> Print Ledger
+                </NavLink>
+            </li>
+            <li class="nav-item px-3">
+                <NavLink class="nav-link" href="Sugar\List">
+                    <span class="oi oi-spreadsheet" aria-hidden="true"></span> Blood Sugar
+                </NavLink>
+            </li>
+            <li class="nav-item px-3">
+                <button @onclick="ToggleReportMenu">Toggle Menu</button>
+            </li>
+        </ul>
+    }
+    else
+    {
+
+        <ul class="nav flex-column">
+            <li class="nav-item px-3">
+                <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
+                    <span class="oi oi-home" aria-hidden="true"></span> Home
+                </NavLink>
+            </li>
+            <li class="nav-item px-3">
+                <NavLink class="nav-link" href="book\list">
+                    <span class="oi oi-spreadsheet" aria-hidden="true"></span> Books
+                </NavLink>
+            </li>
+            <li class="nav-item px-3">
+                <NavLink class="nav-link" href="course\list">
+                    <span class="oi oi-spreadsheet" aria-hidden="true"></span> Courses
+                </NavLink>
+            </li>
+            <li class="nav-item px-3">
+                <NavLink class="nav-link" href="doctor\list">
+                    <span class="oi oi-spreadsheet" aria-hidden="true"></span> Doctors
+                </NavLink>
+            </li>
+            <li class="nav-item px-3">
+                <NavLink class="nav-link" href="medicalVisit\list">
+                    <span class="oi oi-spreadsheet" aria-hidden="true"></span> Medical Visit
+                </NavLink>
+            </li>
+            <li class="nav-item px-3">
+                <NavLink class="nav-link" href="medicine\list">
+                    <span class="oi oi-spreadsheet" aria-hidden="true"></span> Medicine
+                </NavLink>
+            </li>
+            <li class="nav-item px-3">
+                <NavLink class="nav-link" href="refill\list">
+                    <span class="oi oi-spreadsheet" aria-hidden="true"></span> Refills
+                </NavLink>
+            </li>
+            <li class="nav-item px-3">
+                <NavLink class="nav-link" href="tracking\list">
+                    <span class="oi oi-spreadsheet" aria-hidden="true"></span> Tracking
+                </NavLink>
+            </li>
+            <li class="nav-item px-3">
+                <NavLink class="nav-link" href="Account\list">
+                    <span class="oi oi-spreadsheet" aria-hidden="true"></span> Accounts
+                </NavLink>
+            </li>
+            <li class="nav-item px-3">
+                <NavLink class="nav-link" href="Ledger\list">
+                    <span class="oi oi-spreadsheet" aria-hidden="true"></span> Ledger
+                </NavLink>
+            </li>
+
+            <li class="nav-item px-3">
+                <button @onclick="ToggleReportMenu">Toggle Menu</button>
+            </li>
+        </ul>
+    }
+</div>
+
+@code {
+    private bool collapseNavMenu = true;
+    private bool ReportMenu = false;
+
+    private string NavMenuCssClass => collapseNavMenu ? "collapse" : null;
+
+    private void ToggleNavMenu()
+    {
+        collapseNavMenu = !collapseNavMenu;
+    }
+
+    private void ToggleReportMenu()
+    {
+        ReportMenu = !ReportMenu;
+    }
+}

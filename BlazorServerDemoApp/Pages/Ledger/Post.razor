@@ -1,0 +1,118 @@
+﻿@page "/Ledger/Post"
+@using BlazorServerDemoApp.Models
+@using Microsoft.IdentityModel.Tokens
+@inject IAccountData AccountData
+@inject ILedgerData LedgerData
+<h3>Post</h3>
+@if (AccountList is null)
+{
+    <h4>Records Loading...</h4>
+}
+else
+{
+    <EditForm model="@LedgerInput" OnSubmit="@CreateLedger">
+        <div class="form-group">
+            <label >Year:</label>
+            <input @bind="Year"/>
+        </div>
+        <table class="table table-striped">
+            <thead class="thead-dark">
+            <tr>
+                <th>Account Number</th>
+                <th>Description</th>
+                <th>Type</th>
+                <th>Budget</th>
+                <th>Actual</th>
+            </tr>
+            </thead>
+            <tbody>
+            
+            @foreach (var li in LedgerInput)
+            {
+
+                <tr>
+                    <td>@li.Account.AccountNumber</td>
+                    <td>@li.Account.Description</td>
+                    <td>@li.Account.Type</td>
+                    <td>
+                        <div class="form-group">
+                            <InputNumber class="form-control" @bind-Value="li.Budget"/>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="form-group">
+                            <InputNumber class="form-control" @bind-Value="li.Actual" />
+                        </div>
+                    </td>
+                </tr>
+            }
+            </tbody>
+        </table>
+        <button type="submit" class="btn btn-primary">Update</button>
+    </EditForm>
+}
+@code {
+    private List<AccountModel> AccountList;
+    private AccountModel Account = new AccountModel();
+    private List<LedgerInputModel> LedgerInput = new List<LedgerInputModel>();
+    private int Year;
+
+    protected override async Task OnInitializedAsync()
+    {
+        AccountList = await AccountData.GetAccounts();
+        foreach (var account in AccountList)
+        {
+            LedgerInputModel li = new LedgerInputModel();
+            li.Account = account;
+            li.Actual = 0.0m;
+            li.Budget = 0.0m;
+            li.Year = 0;
+
+            LedgerInput.Add(li);
+        }
+    }
+
+    private async void CreateLedger()
+    {
+        bool firstPass = true;
+        foreach (var li in LedgerInput)
+        {
+            LedgerModel lm = new LedgerModel();
+            lm.AccountNumber = li.Account.AccountNumber;
+            lm.ClassID = li.Account.ClassID;
+            lm.Year = Year;
+            lm.Budget = li.Budget;
+            lm.Actual = li.Actual;
+
+            if (lm.Budget > 0 || lm.Actual > 0)
+            {
+                if (firstPass)
+                {
+                    firstPass = false;
+                    int id2=await LedgerData.DeleteLedgerByYear(Year);
+                }
+                int id = await LedgerData.CreateLedger(lm);
+            }
+        }
+    }
+
+    private void DeleteRecord()
+    {
+
+    }
+    private async void Refresh()
+    {
+        AccountList = await AccountData.GetAccounts();
+        foreach (var account in AccountList)
+        {
+            LedgerInputModel li = new LedgerInputModel();
+            li.Account = account;
+            li.Actual = 0.0m;
+            li.Budget = 0.0m;
+            li.Year = 0;
+
+            LedgerInput.Add(li);
+        }
+        this.StateHasChanged();
+    }
+}

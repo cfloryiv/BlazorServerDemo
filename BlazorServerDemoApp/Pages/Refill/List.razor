@@ -1,0 +1,145 @@
+﻿@page "/Refill/List/{ID:int}"
+@page "/Refill/List"
+
+@inject IRefillData RefillData
+@inject IDoctorData DoctorData
+@inject IMedicineData MedicineData
+@inject NavigationManager navigationManager
+
+<h3>Enter a Refill You Read</h3>
+<EditForm Model="@Refill">
+
+    <div class="form-group">
+        <label class="control-label">Name</label>
+        <select @bind="Refill.Name" class="form-control selectpicker">
+            <option>--select--</option>
+            @if (MedicineList != null)
+            {
+                @foreach (var med in MedicineList)
+                {
+                    <option>@med.Name</option>
+                }
+            }
+        </select>
+    </div>
+
+    <div class="form-group">
+        <label class="control-label">Doctor</label>
+        <select @bind="Refill.Doctor" class="form-control selectpicker">
+            <option>--select--</option>
+            @if (DoctorList != null)
+            {
+                @foreach (var doctor in DoctorList)
+                {
+                    <option>@doctor.Name</option>
+                }
+            }
+        </select>
+    </div>
+    <div class="form-group">
+        <label class="control-label">Pill Size</label>
+        <InputNumber @bind-Value="Refill.PillSize" class="form-control" />
+    </div>
+    <div class="form-group">
+        <label class="control-label">Period - Days Supply</label>
+        <select @bind="Refill.Period" class="form-control selectpicker">
+            <option>30</option>
+            <option>90</option>
+            <option>1</option>
+        </select>
+    </div>
+    <div class="form-group">
+        <label class="control-label">Cost</label>
+        <InputNumber @bind-Value="Refill.Cost" class="form-control" />
+    </div>
+    <div class="form-group">
+        <input type="submit" value="Create Refill" class="btn btn-primary" @onclick="(() => CreateRefill())" />
+        <input type="submit" value="Delete" class="btn btn-danger" @onclick="(() => DeleteRecord(Refill.ID))" />
+    </div>
+</EditForm>
+
+@if (RefillList is null)
+{
+    <h4>Records Loading...</h4>
+}
+else
+{
+    <table class="table table-striped">
+        <thead class="thead-dark">
+            <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Date</th>
+                <th>Pill Size</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var Refill in RefillList)
+            {
+                <tr>
+                    <td>
+                            <button class="btn" @onclick="(() => REadRefill(Refill.ID))">
+                                @Refill.ID
+                            </button>
+                        </td>
+                    <td>@Refill.Name</td>
+                    <td>@Refill.Date</td>
+                    <td>@Refill.PillSize</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    [Parameter]
+    public int ID { get; set; }
+    private List<RefillModel> RefillList;
+    private RefillModel Refill = new RefillModel();
+    public List<DoctorModel> DoctorList;
+    private List<MedicineModel> MedicineList;
+
+    protected override async Task OnInitializedAsync()
+    {
+        RefillList = await RefillData.GetRefills();
+        DoctorList = await DoctorData.GetDoctors();
+        MedicineList = await MedicineData.GetMedicines();
+    }
+
+    private async void CreateRefill()
+    {
+        Refill.Date = DateTime.Now;
+        Refill.PersonID = 1;// fill in later
+        if (Refill.ID == 0)
+        {
+            int id = await RefillData.CreateRefill(Refill);
+        }
+        else
+        {
+            int id = await RefillData.UpdateRefill(Refill);
+        }
+        Refresh();
+        // Refill = new RefillModel();
+        //RefillList = await RefillData.GetRefills();
+    }
+    private async Task REadRefill(int ID)
+    {
+        Refill = await RefillData.GetRefillById(ID);
+    }
+    private void DeleteRecord(int ID)
+    {
+        if (ID != 0)
+        {
+            RefillData.DeleteRefill(ID);
+            Refresh();
+        }
+    }
+    private async void Refresh()
+    {
+        RefillList = await RefillData.GetRefills();
+        DoctorList = await DoctorData.GetDoctors();
+        MedicineList = await MedicineData.GetMedicines();
+        Refill =new RefillModel();
+        this.StateHasChanged();
+    }
+}

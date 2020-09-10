@@ -1,0 +1,114 @@
+﻿@page "/Course/List/{ID:int}"
+@page "/Course/List"
+
+@inject ICourseData CourseData
+@inject NavigationManager navigationManager
+
+<h3>Enter a Course You're Taking</h3>
+<EditForm Model="@Course" >
+  
+    <div class="form-group">
+        <label class="control-label">Name</label>
+        <InputText @bind-Value="Course.Name" class="form-control" />
+    </div>
+    <div class="form-group">
+        <label class="control-label">Author</label>
+        <InputText @bind-Value="Course.Author" class="form-control" />
+    </div>
+    <div class="form-group">
+        <label class="control-label">Platform</label>
+        <select @bind="Course.Platform" class="form-control selectpicker">
+            <option>--select--</option>
+            <option>Udemy</option>
+            <option>Pluralsight</option>
+        </select>
+    </div>
+    <div class="form-group">
+        <label class="control-label">Cost</label>
+        <InputNumber @bind-Value="Course.Cost" class="form-control" />
+    </div>
+    <div class="form-group">
+        <input type="submit" value="Create Course" class="btn btn-primary" @onclick="(() => CreateCourse())" />
+        <input type="submit" value="Delete" class="btn btn-danger" @onclick="(() => DeleteRecord(Course.ID))" />
+    </div>
+</EditForm>
+
+@if (CourseList is null)
+{
+    <h4>Records Loading...</h4>
+}
+else
+{
+    <table class="table table-striped">
+        <thead class="thead-dark">
+        <tr>
+            <th>ID</th>
+            <th>Name</th>
+            <th>Author</th>
+            <th>Platform</th>
+        </tr>
+        </thead>
+        <tbody>
+        @foreach (var Course in CourseList)
+        {
+            <tr>
+                <td>
+                        <button class="btn" @onclick="(() => ReadCourse(Course.ID))">
+                            @Course.ID
+                        </button>
+                    </td>
+                <td>@Course.Name</td>
+                <td>@Course.Author</td>
+                <td>@Course.Platform</td>
+            </tr>
+        }
+        </tbody>
+    </table>
+}
+
+@code {
+    [Parameter]
+    public int ID { get; set; }
+    private List<CourseModel> CourseList;
+    private CourseModel Course =new CourseModel();
+
+    protected override async Task OnInitializedAsync()
+    {
+        CourseList = await CourseData.GetCourses();
+    }
+
+    private async void CreateCourse()
+    {
+        Course.PersonID = 1;// fill in later
+        Course.Date=DateTime.Now;
+        if (Course.ID == 0)
+        {
+            int id = await CourseData.CreateCourse(Course);
+        }
+        else
+        {
+            int id = await CourseData.UpdateCourse(Course);
+        }
+        Refresh();
+        // Course = new CourseModel();
+        //CourseList = await CourseData.GetCourses();
+    }
+    private async Task ReadCourse(int ID)
+    {
+        Course = await CourseData.GetCourseById(ID);
+    }
+    private void DeleteRecord(int ID)
+    {
+        if (ID != 0)
+        {
+            CourseData.DeleteCourse(ID);
+            Refresh();
+        }
+    }
+    private async void Refresh()
+    {
+        CourseList = await CourseData.GetCourses();
+        Course=new CourseModel();
+        this.StateHasChanged();
+    }
+}

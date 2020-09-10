@@ -1,0 +1,131 @@
+﻿@page "/Tracking/List/{ID:int}"
+@page "/Tracking/List"
+
+@inject ITrackingData TrackingData
+@inject NavigationManager navigationManager
+
+<h3>Enter a Product You've Bought</h3>
+<EditForm Model="@Tracking">
+
+    <div class="form-group">
+        <label class="control-label">Item</label>
+        <InputText @bind-Value="Tracking.Item" class="form-control" />
+    </div>
+    <div class="form-group">
+        <label class="control-label">Qty</label>
+        <InputText @bind-Value="Tracking.Qty" class="form-control" />
+    </div>
+    <div class="form-group">
+        <label class="control-label">Depleted</label>
+        <InputText @bind-Value="Tracking.Depleted" class="form-control" />
+    </div>
+    <div class="form-group">
+        <label class="control-label">Depleted Date</label>
+        <InputDate @bind-Value="Tracking.DepletedDate" class="form-control" />
+    </div>
+    <div class="form-group">
+        <input type="submit" value="Create Item" class="btn btn-primary" @onclick="(() => CreateTracking())" />
+        <input type="submit" value="Delete" class="btn btn-danger" @onclick="(() => DeleteRecord(Tracking.ID))" />
+        <input type="submit" value="Deplete" class="btn btn-danger" @onclick="(() => DepleteRecord(Tracking.ID))" />
+    </div>
+</EditForm>
+
+@if (TrackingList is null)
+{
+    <h4>Records Loading...</h4>
+}
+else
+{
+    <table class="table table-striped">
+        <thead class="thead-dark">
+            <tr>
+                <th>ID</th>
+                <th>Date</th>
+                <th>Item</th>
+                <th>Qty</th>
+                <th>Depleted</th>
+                <th>Date</th>
+                <th>Days</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var Tracking in TrackingList)
+            {
+                <tr>
+                    <td>
+                        <button class="btn" @onclick="(() => ReadTracking(Tracking.ID))">
+                            @Tracking.ID
+                        </button>
+                    </td>
+                    <td>@Tracking.Date</td>
+                    <td>@Tracking.Item</td>
+                    <td>@Tracking.Qty</td>
+                    <td>@Tracking.Depleted</td>
+                    <td>@Tracking.DepletedDate</td>
+                    <td>@Tracking.DepletedDate.Subtract(@Tracking.Date).Days</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    [Parameter]
+    public int ID { get; set; }
+    private List<TrackingModel> TrackingList;
+    private TrackingModel Tracking = new TrackingModel();
+
+    protected override async Task OnInitializedAsync()
+    {
+        TrackingList = await TrackingData.GetTrackings();
+    }
+
+    private async void CreateTracking()
+    {
+       
+        if (Tracking.Depleted != "Y")
+        {
+            Tracking.DepletedDate=DateTime.Now;
+        }
+        Tracking.PersonID = 1;// fill in later
+        if (Tracking.ID == 0)
+        {
+            Tracking.Date = DateTime.Now;
+            int id = await TrackingData.CreateTracking(Tracking);
+        }
+        else
+        {
+            int id = await TrackingData.UpdateTracking(Tracking);
+        }
+        Refresh();
+        // Tracking = new TrackingModel();
+        //TrackingList = await TrackingData.GetTrackings();
+    }
+    private async Task ReadTracking(int ID)
+    {
+        Tracking = await TrackingData.GetTrackingById(ID);
+    }
+    private void DeleteRecord(int ID)
+    {
+        if (ID != 0)
+        {
+            TrackingData.DeleteTracking(ID);
+            Refresh();
+        }
+    }
+
+    private async void DepleteRecord(int ID)
+    {
+        Tracking.Depleted = "Y";
+        Tracking.DepletedDate=DateTime.Now;
+        int id = await TrackingData.UpdateTracking(Tracking);
+        Refresh();
+
+    }
+    private async void Refresh()
+    {
+        TrackingList = await TrackingData.GetTrackings();
+        Tracking=new TrackingModel();
+        this.StateHasChanged();
+    }
+}

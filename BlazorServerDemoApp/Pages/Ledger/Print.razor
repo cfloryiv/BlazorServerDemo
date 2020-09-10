@@ -1,0 +1,81 @@
+﻿@page "/Ledger/Print"
+@using System.Runtime.CompilerServices
+@using BlazorServerDemoApp.Models
+@using Microsoft.IdentityModel.Tokens
+@inject IAccountData AccountData
+@inject ILedgerData LedgerData
+<h3>Print</h3>
+@if (AccountList is null)
+{
+    <h4>Records Loading...</h4>
+}
+else
+{
+    <div class="form-group">
+        <label>Year:</label>
+        <input @bind="Year" />
+    </div>
+    <button class="btn btn-primary" @onclick="CalcLedger">Print</button>
+    <table class="table border=0">
+            <tbody>
+
+                @foreach (var li in LedgerInput)
+                {
+
+                    <tr>
+                        <td>@li.Account.AccountNumber</td>
+                        <td>@li.Account.Description</td>
+                        <td>@li.Budget.ToString("C2")</td>
+                        <td>@li.Actual.ToString("C2")</td>
+                        <td>@li.Variance.ToString("C2")</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+
+}
+@code {
+    private List<AccountModel> AccountList;
+    private AccountModel Account = new AccountModel();
+    private List<LedgerInputModel> LedgerInput = new List<LedgerInputModel>();
+    private int Year;
+    private List<LedgerModel> lm = new List<LedgerModel>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        AccountList = await AccountData.GetAccounts();
+       
+    }
+
+    async void CalcLedger()
+    {
+        lm = await LedgerData.GetLedgerByYear(Year);
+        foreach (var ledger in lm)
+        {
+            LedgerInputModel li = new LedgerInputModel();
+            li.Account = AccountList.Find(a => a.AccountNumber == ledger.AccountNumber);
+            li.Actual = ledger.Actual;
+            li.Budget = ledger.Budget;
+            li.Year = 0;
+            li.Variance = li.Budget - li.Actual;
+
+            LedgerInput.Add(li);
+        }
+    }
+
+    private async void Refresh()
+    {
+        AccountList = await AccountData.GetAccounts();
+        foreach (var account in AccountList)
+        {
+            LedgerInputModel li = new LedgerInputModel();
+            li.Account = account;
+            li.Actual = 0.0m;
+            li.Budget = 0.0m;
+            li.Year = 0;
+
+            LedgerInput.Add(li);
+        }
+        this.StateHasChanged();
+    }
+}

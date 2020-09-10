@@ -1,0 +1,108 @@
+﻿@page "/Medicine/List/{ID:int}"
+@page "/Medicine/List"
+
+@inject IMedicineData MedicineData
+@inject NavigationManager navigationManager
+
+<h3>Enter a Medicine You Read</h3>
+<EditForm Model="@Medicine">
+
+    <div class="form-group">
+        <label class="control-label">Name</label>
+        <InputText @bind-Value="Medicine.Name" class="form-control" />
+    </div>
+    <div class="form-group">
+        <label class="control-label">Doctor</label>
+        <InputText @bind-Value="Medicine.Doctor" class="form-control" />
+    </div>
+    <div class="form-group">
+        <label class="control-label">Pill Size</label>
+        <InputNumber @bind-Value="Medicine.PillSize" class="form-control" />
+    </div>
+    <div class="form-group">
+        <label class="control-label">Cost</label>
+        <InputNumber @bind-Value="Medicine.Cost" class="form-control" />
+    </div>
+    <div class="form-group">
+        <input type="submit" value="Create Medicine" class="btn btn-primary" @onclick="(() => CreateMedicine())" />
+        <input type="submit" value="Delete" class="btn btn-danger" @onclick="(() => DeleteRecord(Medicine.ID))" />
+    </div>
+</EditForm>
+
+@if (MedicineList is null)
+{
+    <h4>Records Loading...</h4>
+}
+else
+{
+    <table class="table table-striped">
+        <thead class="thead-dark">
+            <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Doctor</th>
+                <th>Cost</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var Medicine in MedicineList)
+            {
+                <tr>
+                    <td>
+                            <button class="btn" @onclick="(() => ReadMedicine(Medicine.ID))">
+                                @Medicine.ID
+                            </button>
+                        </td>
+                    <td>@Medicine.Name</td>
+                    <td>@Medicine.Doctor</td>
+                    <td>@Medicine.Cost</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    [Parameter]
+    public int ID { get; set; }
+    private List<MedicineModel> MedicineList;
+    private MedicineModel Medicine = new MedicineModel();
+
+    protected override async Task OnInitializedAsync()
+    {
+        MedicineList = await MedicineData.GetMedicines();
+    }
+
+    private async void CreateMedicine()
+    {
+        if (Medicine.ID == 0)
+        {
+            int id = await MedicineData.CreateMedicine(Medicine);
+        }
+        else
+        {
+            int id = await MedicineData.UpdateMedicine(Medicine);
+        }
+        Refresh();
+        // Medicine = new MedicineModel();
+        //MedicineList = await MedicineData.GetMedicines();
+    }
+    private async Task ReadMedicine(int ID)
+    {
+        Medicine = await MedicineData.GetMedicineById(ID);
+    }
+    private void DeleteRecord(int ID)
+    {
+        if (ID != 0)
+        {
+            MedicineData.DeleteMedicine(ID);
+            Refresh();
+        }
+    }
+    private async void Refresh()
+    {
+        MedicineList = await MedicineData.GetMedicines();
+        Medicine=new MedicineModel();
+        this.StateHasChanged();
+    }
+}

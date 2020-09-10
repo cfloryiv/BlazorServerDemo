@@ -1,0 +1,129 @@
+﻿@page "/Book/List/{ID:int}"
+@page "/Book/List"
+@using System.Diagnostics.Eventing.Reader
+
+
+@inject IBookData BookData
+@inject NavigationManager navigationManager
+
+<h3>Enter a Book You've Read</h3>
+<EditForm Model="@Book">
+
+    <div class="form-group">
+        <label class="control-label">Title</label>
+        <InputText @bind-Value="Book.title" class="form-control" />
+    </div>
+    <div class="form-group">
+        <label class="control-label">Author</label>
+        <InputText @bind-Value="Book.author" class="form-control" />
+    </div>
+    <div class="form-group">
+        <label class="control-label">Binding</label>
+        <select @bind="Book.binding" class="form-control selectpicker">
+            <option>--select--</option>
+            <option>Paperback</option>
+            <option>Hardcover</option>
+        </select>
+    </div>
+    <div class="form-group">
+        <label class="control-label">Number of Pages</label>
+        <InputNumber @bind-Value="Book.numberPages" class="form-control" />
+    </div>
+    <div class="form-group">
+        <label class="control-label">Publish Date</label>
+        <InputDate @bind-Value="Book.pubDate" class="form-control" />
+    </div>
+    <div class="form-group">
+        <input type="submit" value="Create Book" class="btn btn-primary" @onclick="(() => CreateBook())"/>
+        <input type="submit" value="Delete" class="btn btn-danger" @onclick="(() => DeleteRecord(Book.ID))"/>
+    </div>
+
+</EditForm>
+
+@if (BookList is null)
+{
+    <h4>Records Loading...</h4>
+}
+else
+{
+    <table class="table table-striped">
+        <thead class="thead-dark">
+        <tr>
+            <th>ID</th>
+            <th>Name</th>
+            <th>Author</th>
+            <th>Binding</th>
+        </tr>
+        </thead>
+        <tbody>
+        @foreach (var Book in BookList)
+        {
+            <tr>
+                <td>
+                    <button class="btn" @onclick="(() => ReadBook(Book.ID))">
+                        @Book.ID
+                    </button>
+                </td>
+                <td>@Book.title</td>
+                <td>@Book.author</td>
+                <td>@Book.binding</td>
+            </tr>
+        }
+        </tbody>
+    </table>
+}
+
+@code {
+    [Parameter]
+    public int ID { get; set; }
+    private List<BookModel> BookList;
+    private BookModel Book =new BookModel();
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (ID != 0)
+        {
+            Book = await BookData.GetBookById(ID);
+        }
+
+        BookList = await BookData.GetBooks();
+    }
+
+    private async void CreateBook()
+    {
+        Book.date=DateTime.Now;
+        Book.personID = 1;// fill in later
+        if (Book.ID != 0)
+        {
+            int id = await BookData.UpdateBook(Book);
+        }
+        else
+        {
+            int id = await BookData.CreateBook(Book);
+        }
+
+        Refresh();
+        //Book = new BookModel();
+        //BookList = await BookData.GetBooks();
+    }
+
+    private async Task ReadBook(int ID)
+    {
+        Book = await BookData.GetBookById(ID);
+    }
+
+    private void DeleteRecord(int ID)
+    {
+        if (ID != 0)
+        {
+            BookData.DeleteBook(ID);
+            Refresh();
+        }
+    }
+    private async void Refresh()
+    {
+        BookList = await BookData.GetBooks();
+        Book=new BookModel();
+        this.StateHasChanged();
+    }
+}

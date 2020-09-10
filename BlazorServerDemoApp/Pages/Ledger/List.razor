@@ -1,0 +1,116 @@
+﻿@page "/Ledger/list/{ID:int}"
+@page "/Ledger/List"
+
+@inject ILedgerData LedgerData
+@inject NavigationManager navigationManager
+
+<h3>Enter a Ledger You Read</h3>
+<EditForm Model="@Ledger">
+
+    <div class="form-group">
+        <label class="control-label">Ledger Number</label>
+        <InputText @bind-Value="Ledger.AccountNumber" class="form-control" />
+    </div>
+    <div class="form-group">
+        <label class="control-label">Class Id</label>
+        <InputText @bind-Value="Ledger.ClassID" class="form-control" />
+    </div>
+    <div class="form-group">
+        <label class="control-label">Year</label>
+        <InputNumber @bind-Value="Ledger.Year" class="form-control" />
+    </div>
+    <div class="form-group">
+        <label class="control-label">Budget</label>
+        <InputNumber @bind-Value="Ledger.Budget" class="form-control" />
+    </div>
+    <div class="form-group">
+        <label class="control-label">Actual</label>
+        <InputNumber @bind-Value="Ledger.Actual" class="form-control" />
+    </div>
+    <div class="form-group">
+        <input type="submit" value="Create Item" class="btn btn-primary" @onclick="(() => CreateLedger())" />
+        <input type="submit" value="Delete" class="btn btn-danger" @onclick="(() => DeleteRecord(Ledger.ID))" />
+    </div>
+</EditForm>
+
+@if (LedgerList is null)
+{
+    <h4>Records Loading...</h4>
+}
+else
+{
+    <table class="table table-striped">
+        <thead class="thead-dark">
+            <tr>
+                <th>Account Number</th>
+                <th>Class ID</th>
+                <th>Year</th>
+                <th>Budget</th>
+                <th>Actual</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var Ledger in LedgerList)
+            {
+                <tr>
+                    <td>
+                        <button class="btn" @onclick="(() => ReadLedger(Ledger.ID))">
+                            @Ledger.AccountNumber
+                        </button>
+                    </td>
+                    <td>@Ledger.ClassID</td>
+                    <td>@Ledger.Year</td>
+                    <td>@Ledger.Budget.ToString("C2")</td>
+                    <td>@Ledger.Actual.ToString("C2")</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    [Parameter] public int ID { get; set; }
+
+    private List<LedgerModel> LedgerList;
+    private LedgerModel Ledger = new LedgerModel();
+
+    protected override async Task OnInitializedAsync()
+    {
+        LedgerList = await LedgerData.GetLedgers();
+    }
+
+    private async void CreateLedger()
+    {
+
+        if (Ledger.ID == 0)
+        {
+            int id = await LedgerData.CreateLedger(Ledger);
+        }
+        else
+        {
+            int id = await LedgerData.UpdateLedger(Ledger);
+        }
+        Refresh();
+        // Ledger = new LedgerModel();
+        //LedgerList = await LedgerData.GetLedgers();
+    }
+    private async Task ReadLedger(int ID)
+    {
+        Ledger = await LedgerData.GetLedgerById(ID);
+
+    }
+    private void DeleteRecord(int ID)
+    {
+        if (ID !=0)
+        {
+            LedgerData.DeleteLedger(ID);
+            Refresh();
+        }
+    }
+    private async void Refresh()
+    {
+        LedgerList = await LedgerData.GetLedgers();
+        Ledger=new LedgerModel();
+        this.StateHasChanged();
+    }
+}

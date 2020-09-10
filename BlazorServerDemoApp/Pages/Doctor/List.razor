@@ -1,0 +1,109 @@
+﻿@page "/Doctor/List/{ID:int}"
+@page "/Doctor/List"
+
+@inject IDoctorData DoctorData
+@inject NavigationManager navigationManager
+
+<h3>Enter a Doctor You Saw</h3>
+<EditForm Model="@Doctor">
+
+    <div class="form-group">
+        <label class="control-label">Name</label>
+        <InputText @bind-Value="Doctor.Name" class="form-control" />
+    </div>
+    <div class="form-group">
+        <label class="control-label">Hospital</label>
+        <InputText @bind-Value="Doctor.Hospital" class="form-control" />
+    </div>
+    <div class="form-group">
+        <label class="control-label">Telephone#</label>
+        <InputText @bind-Value="Doctor.TelNo" class="form-control" />
+    </div>
+    <div class="form-group">
+        <label class="control-label">Speciality</label>
+        <InputText @bind-Value="Doctor.Speciality" class="form-control" />
+    </div>
+    <div class="form-group">
+        <input type="submit" value="Create Doctor" class="btn btn-primary" @onclick="(() => CreateDoctor())" />
+        <input type="submit" value="Delete" class="btn btn-danger" @onclick="(() => DeleteRecord(Doctor.ID))" />
+    </div>
+</EditForm>
+
+@if (DoctorList is null)
+{
+    <h4>Records Loading...</h4>
+}
+else
+{
+    <table class="table table-striped">
+        <thead class="thead-dark">
+            <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Hospital</th>
+                <th>Telephone#</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var Doctor in DoctorList)
+            {
+                <tr>
+                    <td>
+                            <button class="btn" @onclick="(() => ReadDoctor(Doctor.ID))">
+                                @Doctor.ID
+                            </button>
+                        </td>
+                    <td>@Doctor.Name</td>
+                    <td>@Doctor.Hospital</td>
+                    <td>@Doctor.TelNo</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    [Parameter]
+    public int ID { get; set; }
+    private List<DoctorModel> DoctorList;
+    private DoctorModel Doctor = new DoctorModel();
+
+    protected override async Task OnInitializedAsync()
+    {
+        DoctorList = await DoctorData.GetDoctors();
+    }
+
+    private async void CreateDoctor()
+    {
+        if (Doctor.ID == 0)
+        {
+            int id = await DoctorData.CreateDoctor(Doctor);
+        }
+        else
+        {
+            int id = await DoctorData.UpdateDoctor(Doctor);
+        }
+
+        Refresh();
+        // Doctor = new DoctorModel();
+        //DoctorList = await DoctorData.GetDoctors();
+    }
+    private async Task ReadDoctor(int ID)
+    {
+        Doctor = await DoctorData.GetDoctorById(ID);
+    }
+    private void DeleteRecord(int ID)
+    {
+        if (ID != 0)
+        {
+            DoctorData.DeleteDoctor(ID);
+            Refresh();
+        }
+    }
+    private async void Refresh()
+    {
+        DoctorList = await DoctorData.GetDoctors();
+        Doctor=new DoctorModel();
+        this.StateHasChanged();
+    }
+}

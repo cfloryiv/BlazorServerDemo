@@ -1,0 +1,109 @@
+﻿@page "/Sugar/List/{ID:int}"
+@page "/Sugar/List"
+@using System.ComponentModel
+@using Microsoft.AspNetCore.Routing.Template
+
+@inject ISugarData SugarData
+@inject NavigationManager navigationManager
+
+<h3>Enter a Sugar You Read</h3>
+<EditForm Model="@Sugar">
+
+    <div class="form-group">
+        <label class="control-label">Date</label>
+        <InputDate @bind-Value="Sugar.Date" class="form-control" />
+    </div>
+    <div class="form-group">
+        <label class="control-label">Level</label>
+        <InputNumber @bind-Value="Sugar.Level" class="form-control" />
+    </div>
+    <div class="form-group">
+        <input type="submit" value="Create Item" class="btn btn-primary" @onclick="(() => CreateSugar())" />
+        <input type="submit" value="Delete" class="btn btn-danger" @onclick="(() => DeleteRecord(Sugar.ID))" />
+    </div>
+</EditForm>
+
+@if (SugarList is null)
+{
+    <h4>Records Loading...</h4>
+}
+else
+{
+    <table class="table table-striped">
+        <thead class="thead-dark">
+            <tr>
+                <th>ID</th>
+                <th>Date</th>
+                <th>Level</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var Sugar in SugarList)
+            {
+                <tr>
+                    <td>
+                        <button class="btn" @onclick="(() => ReadSugar(Sugar.ID))">
+                            @Sugar.ID
+                        </button>
+                    </td>
+                    <td>@Sugar.Date</td>
+                    <td>@Sugar.Level</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    [Parameter]
+    public int ID { get; set; }
+    private List<SugarModel> SugarList;
+    private SugarModel Sugar = new SugarModel();
+    private DateTime now=DateTime.Now;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (ID != 0)
+        {
+            Sugar = await SugarData.GetSugarById(ID);
+        }
+        SugarList = await SugarData.GetSugars();
+        Sugar.Date = now;
+    }
+
+    private async void CreateSugar()
+    {
+        if (Sugar.ID == 0)
+        {
+            ID = await SugarData.CreateSugar(Sugar);
+        }
+        else
+        {
+            int id = await SugarData.UpdateSugar(Sugar);
+        }
+        //navigationManager.NavigateTo("/");
+        Refresh();
+        //SugarList = await SugarData.GetSugars();
+    }
+
+    private async void Refresh()
+    {
+        ID = 0;
+        Sugar = new SugarModel();
+        SugarList = await SugarData.GetSugars();
+        Sugar.Date = now;
+        this.StateHasChanged();
+    }
+    private async Task ReadSugar(int ID)
+    {
+        Sugar = await SugarData.GetSugarById(ID);
+    }
+    private void DeleteRecord(int ID)
+    {
+        if (ID != 0)
+        {
+            SugarData.DeleteSugar(ID);
+            Refresh();
+        }
+    }
+}

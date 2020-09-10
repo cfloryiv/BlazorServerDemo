@@ -1,0 +1,113 @@
+﻿@page "/Account/list/{accountNumber}/{classID}"
+@page "/Account/List"
+
+@inject IAccountData AccountData
+@inject NavigationManager navigationManager
+
+<h3>Enter a Account You Read</h3>
+<EditForm Model="@Account">
+
+    <div class="form-group">
+        <label class="control-label">Account Number</label>
+        <InputText @bind-Value="Account.AccountNumber" class="form-control" />
+    </div>
+    <div class="form-group">
+        <label class="control-label">Class Id</label>
+        <InputText @bind-Value="Account.ClassID" class="form-control" />
+    </div>
+    <div class="form-group">
+        <label class="control-label">Description</label>
+        <InputText @bind-Value="Account.Description" class="form-control" />
+    </div>
+    <div class="form-group">
+        <label class="control-label">Type</label>
+        <InputText @bind-Value="Account.Type" class="form-control" />
+    </div>
+    <div class="form-group">
+        <input type="submit" value="Create Item" class="btn btn-primary" @onclick="(() => CreateAccount())" />
+        <input type="submit" value="Delete" class="btn btn-danger" @onclick="(() => DeleteRecord(Account.AccountNumber, Account.ClassID))" />
+    </div>
+</EditForm>
+
+@if (AccountList is null)
+{
+    <h4>Records Loading...</h4>
+}
+else
+{
+    <table class="table table-striped">
+        <thead class="thead-dark">
+            <tr>
+                <th>Account Number</th>
+                <th>Class ID</th>
+                <th>Description</th>
+                <th>Type</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var Account in AccountList)
+            {
+                <tr>
+                    <td>
+                        <button class="btn" @onclick="(() => ReadAccount(Account.AccountNumber, Account.ClassID))">
+                            @Account.AccountNumber
+                        </button>
+                    </td>
+                    <td>@Account.ClassID</td>
+                    <td>@Account.Description</td>
+                    <td>@Account.Type</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    [Parameter] public string accountNumber { get; set; }
+    [Parameter] public string classID { get; set; }
+
+    private List<AccountModel> AccountList;
+    private AccountModel Account = new AccountModel();
+
+    protected override async Task OnInitializedAsync()
+    {
+        AccountList = await AccountData.GetAccounts();
+    }
+
+    private async void CreateAccount()
+    {
+
+        if (accountNumber is null || accountNumber == "")
+        {
+            int id = await AccountData.CreateAccount(Account);
+        }
+        else
+        {
+            int id = await AccountData.UpdateAccount(Account);
+        }
+       Refresh();
+        // Account = new AccountModel();
+        //AccountList = await AccountData.GetAccounts();
+    }
+    private async Task ReadAccount(string an, string ci)
+    {
+        Account = await AccountData.GetAccountById(an, ci);
+        accountNumber = an;
+        classID = ci;
+
+    }
+    private void DeleteRecord(string AccountNumber, string ClassID)
+    {
+        if (!(AccountNumber is null))
+        {
+            AccountData.DeleteAccount(AccountNumber, ClassID);
+            Refresh();
+        }
+    }
+
+    private async void Refresh()
+    {
+        AccountList = await AccountData.GetAccounts();
+        this.StateHasChanged();
+    }
+}
