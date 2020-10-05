@@ -10,6 +10,7 @@ using BlazorServerDemoApp.Pages.Order;
 using BlazorServerDemoApp.ViewModels;
 using DataLibrary.Data;
 using DataLibrary.Models;
+using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace BlazorServerDemoApp.Utilities
 {
@@ -27,19 +28,19 @@ namespace BlazorServerDemoApp.Utilities
         {
             new UILine()
             {
-                ID = "Name", LabelText = "Name: ", FieldType = "InputText", FieldName = "ViewModel.Name"
+                ID = "Name", LabelText = "Name: ", FieldType = "InputText", FieldName = "ViewModel.Name", ReportName = "record.Name"
             },
             new UILine()
             {
-                ID = "Hospital", LabelText = "Hospital: ", FieldType = "InputText", FieldName = "ViewModel.Hospital"
+                ID = "Hospital", LabelText = "Hospital: ", FieldType = "InputText", FieldName = "ViewModel.Hospital", ReportName = "record.Hospital"
             },
             new UILine()
             {
-                ID = "TelNo", LabelText = "Telephone#: ", FieldType = "InputText", FieldName = "ViewModel.TelNo"
+                ID = "TelNo", LabelText = "Telephone#: ", FieldType = "InputText", FieldName = "ViewModel.TelNo", ReportName = "record.TelNo"
             },
             new UILine()
             {
-                ID = "Speciality", LabelText = "Speciality: ", FieldType = "InputText", FieldName = "ViewModel.Speciality"
+                ID = "Speciality", LabelText = "Speciality: ", FieldType = "InputText", FieldName = "ViewModel.Speciality", ReportName = "record.Speciality"
             }
         };
 
@@ -49,6 +50,9 @@ namespace BlazorServerDemoApp.Utilities
         public void CreateTemplates()
         {
             var template = new List<string>();
+            var template2 = new List<string>();
+            var template3 = new List<string>();
+
             foreach (var uiline in Fields)
             {
                 template.Add("<div class=\"form-group\">");
@@ -56,16 +60,12 @@ namespace BlazorServerDemoApp.Utilities
                 template.Add($"<{uiline.FieldType} @bind-Value=\"{uiline.FieldName}\" class=\"form-control\" />");
                 template.Add($"<ValidationMessage For=\"() => {uiline.FieldName}\" />");
                 template.Add($"</div>");
+
+                template2.Add($"<th>{uiline.LabelText}</th>");
+
+                template3.Add($"<td>@{uiline.ReportName}</td>");
             }
 
-            using (var sw = new StreamWriter(Path + "UIForm.template"))
-            {
-                foreach (var line in template)
-                {
-                    sw.WriteLine(line);
-                }
-
-            }
             var output = new List<string>();
             using (StreamReader sr = new StreamReader(Path + "UIList.razorx"))
             {
@@ -78,7 +78,23 @@ namespace BlazorServerDemoApp.Utilities
                     var str =process.Trim().Split(" ");
                     if (str[0] == "@*#")
                     {
-                        foreach (var tline in template)
+                        var temp = new List<string>();
+                        switch (str[1])
+                        {
+                            case "1": 
+                                temp = template;
+                                break;
+                            case "2":
+                                temp = template2;
+                                break;
+                            case "3":
+                                temp = template3;
+                                break;
+                            default:
+                                temp=new List<string>();
+                                break;
+                        }
+                        foreach (var tline in temp)
                         {
                             output.Add(tline);
                         }
@@ -108,6 +124,7 @@ namespace BlazorServerDemoApp.Utilities
         public async Task Create(DoctorViewModel ViewModel, int ID)
         {
             DoctorModel Doctor = _mapper.Map<DoctorModel>(ViewModel);
+            Doctor.ID = ID;
             if (ID == 0)
             {
                 int id = await _doctorData.CreateDoctor(Doctor);
@@ -127,6 +144,11 @@ namespace BlazorServerDemoApp.Utilities
         {
             return await _doctorData.GetDoctors();
         }
+
+        public DoctorViewModel Clear()
+        {
+            return new DoctorViewModel();
+        }
     }
 
     public class UILine
@@ -135,5 +157,6 @@ namespace BlazorServerDemoApp.Utilities
         public string LabelText { get; set; }
         public string FieldType { get; set; }
         public string FieldName { get; set; }
+        public string ReportName { get; set; }
     }
 }

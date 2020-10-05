@@ -12,7 +12,7 @@
     <DataAnnotationsValidator />
     <ValidationSummary />
 
-    @*# UIForm.template *@
+    @*# 1 *@
     
     <div class="form-group">
         <input type="submit" value="Create" class="btn btn-primary" />
@@ -30,24 +30,20 @@ else
         <thead class="thead-dark">
             <tr>
                 <th>ID</th>
-                <th>Name</th>
-                <th>Hospital</th>
-                <th>Telephone#</th>
+                @*# 2 *@
             </tr>
         </thead>
         <tbody>
             @foreach (var record in ModelList)
             {
-                <tr>
-                    <td>
-                        <button class="btn" @onclick="(() => ReadRecord(record.ID))">
-                            @record.ID
-                        </button>
-                    </td>
-                    <td>@record.Name</td>
-                    <td>@record.Hospital</td>
-                    <td>@record.TelNo</td>
-                </tr>
+            <tr>
+                <td>
+                    <button class="btn" @onclick="(() => ReadRecord(record.ID))">
+                        @record.ID
+                    </button>
+                </td>
+                @*# 3 *@
+            </tr>
             }
         </tbody>
     </table>
@@ -95,7 +91,8 @@ else
     private async void Refresh()
     {
         ModelList = await UIModel.GetList();
-        ViewModel = new DoctorViewModel();
+        ViewModel = UIModel.Clear();
+        ID = 0;
         this.StateHasChanged();
     }
 }
