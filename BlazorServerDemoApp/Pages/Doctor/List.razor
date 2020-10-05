@@ -1,31 +1,39 @@
 ﻿@page "/Doctor/List/{ID:int}"
 @page "/Doctor/List"
+@using AutoMapper
+@using BlazorServerDemoApp.ViewModels
 
 @inject IDoctorData DoctorData
 @inject NavigationManager navigationManager
+@inject IMapper mapper;
 
 <h3>Enter a Doctor You Saw</h3>
-<EditForm Model="@Doctor">
-
+<EditForm Model="@ViewModel" OnValidSubmit="@HandleValidSubmit">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
     <div class="form-group">
         <label class="control-label">Name</label>
-        <InputText @bind-Value="Doctor.Name" class="form-control" />
+        <InputText @bind-Value="ViewModel.Name" class="form-control" />
+        <ValidationMessage For="() => ViewModel.Name" />
     </div>
     <div class="form-group">
         <label class="control-label">Hospital</label>
-        <InputText @bind-Value="Doctor.Hospital" class="form-control" />
+        <InputText @bind-Value="ViewModel.Hospital" class="form-control" />
+        <ValidationMessage For="() => ViewModel.Hospital" />
     </div>
     <div class="form-group">
         <label class="control-label">Telephone#</label>
-        <InputText @bind-Value="Doctor.TelNo" class="form-control" />
+        <InputText @bind-Value="ViewModel.TelNo" class="form-control" />
+        <ValidationMessage For="() => ViewModel.TelNo" />
     </div>
     <div class="form-group">
         <label class="control-label">Speciality</label>
-        <InputText @bind-Value="Doctor.Speciality" class="form-control" />
+        <InputText @bind-Value="ViewModel.Speciality" class="form-control" />
+        <ValidationMessage For="() => ViewModel.Speciality" />
     </div>
     <div class="form-group">
-        <input type="submit" value="Create Doctor" class="btn btn-primary" @onclick="(() => CreateDoctor())" />
-        <input type="submit" value="Delete" class="btn btn-danger" @onclick="(() => DeleteRecord(Doctor.ID))" />
+        <input type="submit" value="Create" class="btn btn-primary"/>
+        <input value="Delete" class="btn btn-danger" @onclick="(() => DeleteRecord(Doctor.ID))" />
     </div>
 </EditForm>
 
@@ -67,15 +75,21 @@ else
     public int ID { get; set; }
     private List<DoctorModel> DoctorList;
     private DoctorModel Doctor = new DoctorModel();
+    private DoctorViewModel ViewModel=new DoctorViewModel();
 
     protected override async Task OnInitializedAsync()
     {
         DoctorList = await DoctorData.GetDoctors();
     }
 
+    public void HandleValidSubmit()
+    {
+        CreateDoctor();
+    }
     private async void CreateDoctor()
     {
-        if (Doctor.ID == 0)
+        Doctor = mapper.Map<DoctorModel>(ViewModel);
+        if (ID == 0)
         {
             int id = await DoctorData.CreateDoctor(Doctor);
         }
@@ -91,6 +105,7 @@ else
     private async Task ReadDoctor(int ID)
     {
         Doctor = await DoctorData.GetDoctorById(ID);
+        ViewModel = mapper.Map<DoctorViewModel>(Doctor);
     }
     private void DeleteRecord(int ID)
     {
@@ -104,6 +119,7 @@ else
     {
         DoctorList = await DoctorData.GetDoctors();
         Doctor=new DoctorModel();
+        ViewModel=new DoctorViewModel();
         this.StateHasChanged();
     }
 }

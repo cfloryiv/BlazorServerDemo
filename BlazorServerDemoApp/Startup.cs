@@ -2,6 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using AutoMapper;
+using BlazorServerDemoApp.Utilities;
+using BlazorServerDemoApp.ViewModels;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Hosting;
@@ -46,14 +49,21 @@ namespace BlazorServerDemoApp
             services.AddSingleton<IAccountData, AccountData>();
             services.AddSingleton<ILedgerData, LedgerData>();
             services.AddSingleton<ISugarData, SugarData>();
+
+            services.AddAutoMapper
+                (typeof(AutoMapperProfile).Assembly);
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env,
+            IDoctorData doctorData,
+            IMapper mapper)
         {
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
+                var ui = new DoctorUI(doctorData, mapper);
+                ui.CreateTemplates();
             }
             else
             {

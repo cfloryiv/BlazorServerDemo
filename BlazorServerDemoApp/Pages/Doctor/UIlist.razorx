@@ -1,0 +1,101 @@
+﻿@page "/Doctor/UIList/{ID:int}"
+@page "/Doctor/UIList"
+@using AutoMapper
+@using BlazorServerDemoApp.Utilities
+@using BlazorServerDemoApp.ViewModels
+
+
+@inject NavigationManager navigationManager
+
+<h3>Enter a Doctor You Saw</h3>
+<EditForm Model="@ViewModel" OnValidSubmit="@HandleValidSubmit">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    @*# UIForm.template *@
+    
+    <div class="form-group">
+        <input type="submit" value="Create" class="btn btn-primary" />
+        <input value="Delete" class="btn btn-danger" @onclick="(() => DeleteRecord(ID))" />
+    </div>
+</EditForm>
+
+@if (ModelList is null)
+{
+    <h4>Records Loading...</h4>
+}
+else
+{
+    <table class="table table-striped">
+        <thead class="thead-dark">
+            <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Hospital</th>
+                <th>Telephone#</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var record in ModelList)
+            {
+                <tr>
+                    <td>
+                        <button class="btn" @onclick="(() => ReadRecord(record.ID))">
+                            @record.ID
+                        </button>
+                    </td>
+                    <td>@record.Name</td>
+                    <td>@record.Hospital</td>
+                    <td>@record.TelNo</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    [Inject]
+    public IMapper mapper { get; set; }
+    [Inject]
+    public IDoctorData DoctorData { get; set; }
+    [Parameter]
+    public int ID { get; set; }
+    private List<DoctorModel> ModelList;
+    private DoctorViewModel ViewModel = new DoctorViewModel();
+    public DoctorUI UIModel { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        UIModel = new DoctorUI(DoctorData, mapper);
+        ModelList = await UIModel.GetList();
+    }
+
+    public void HandleValidSubmit()
+    {
+        CreateRecord();
+    }
+    private async void CreateRecord()
+    {
+        await UIModel.Create(ViewModel, ID);
+        Refresh();
+    }
+    private async Task ReadRecord(int id)
+    {
+        ViewModel=await UIModel.Read(id);
+        ID = id;
+    }
+    private void DeleteRecord(int ID)
+    {
+        if (ID != 0)
+        {
+            UIModel.Delete(ID);
+            Refresh();
+        }
+    }
+    private async void Refresh()
+    {
+        ModelList = await UIModel.GetList();
+        ViewModel = new DoctorViewModel();
+        this.StateHasChanged();
+    }
+}
